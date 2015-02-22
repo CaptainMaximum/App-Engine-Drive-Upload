@@ -130,7 +130,7 @@ class GoogleDriveFile(ApiAttributeMixin, ApiResource):
     if self.get('mimeType') is None:
       self['mimeType'] = 'text/plain'
 
-  def SetContentFileObj(self, obj):
+  def SetContentObject(self, obj):
     self.content = obj.open()
     if self.get('title') is None:
       self['title'] = obj.filename

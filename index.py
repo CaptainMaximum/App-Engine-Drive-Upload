@@ -31,7 +31,7 @@ class OauthHandler(webapp2.RequestHandler):
 
         credentials_model = models.APICredentials(date_obtained=int(time.time()), credentials=creds)
         credentials_model.put()
-        self.response.out.write(creds)
+        self.redirect("/admin/")
 
 class RefreshTester(webapp2.RequestHandler):
     def get(self):
@@ -56,7 +56,6 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
         title = self.request.get('title')
         _file = self.get_uploads()[0]
-        self.response.out.write(_file.content_type  + "<br />")
         gauth = GoogleAuth(flow_params = {'state':'', 'approval_prompt': 'force', 'user_id':'drivebox.test@gmail.com'})
         credentials_model = [x for x in models.APICredentials.query().order(-models.APICredentials.date_obtained)][0]
         creds_json = credentials_model.credentials
@@ -66,13 +65,13 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
         file1 = drive.CreateFile({'title': _file.filename, 'mimetype': _file.content_type})
         file1.SetContentObject(_file)
         file1.Upload()
-        self.response.out.write(title + "<br />")
+        _file.delete()
+        self.redirect("/")
        # self.response.out.write(_file.open().read())
 
+
 app = webapp2.WSGIApplication([
-    ("/", MainHandler),
+    ("/", FormPageHandler),
     ("/oauth2callback", OauthHandler),
-    ("/refreshtest", RefreshTester),
-    ("/formpage", FormPageHandler),
     ("/upload", UploadHandler)
     ])
