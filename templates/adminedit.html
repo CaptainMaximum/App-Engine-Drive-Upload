@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Admin Edit Page</title>
+    </head>
+    <body>
+        <h1>User Stories</h1>
+        <form action="/admin/remove/" method="post">
+            <ul>
+                {% for p in POSTS %}
+                <li>
+                    <input type="checkbox" name="user-story" value="{{p.key.id}}">{{p.title}}
+                </li>
+                {% empty %}
+                <p>No stories to edit.</p>
+                {% endfor %}
+                <input type="submit" value="Delete Selected">
+            </ul>
+        </form>
+    </body>
+</html>

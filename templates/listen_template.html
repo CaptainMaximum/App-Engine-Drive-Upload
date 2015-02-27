@@ -2,15 +2,20 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <title>Form Upload Page</title>
+        <title>Storyweb- Listen</title>
     </head>
     <body>
-        <form action="{{upload}}" enctype="multipart/form-data" method="post">
-            <textarea name="user-story" rows="6" cols="60" placeholder="User's text story goes here"></textarea> <br />
-            <label for="picture-form">Picture</label><input type="file" name="picture" id="picture-form"> <br />
-            <label for="audio-file">Audio</label><input type="file" name="audio" id="audio-file"> <br />
-            <input type="submit">
-        </form>
+        <h1>Listen to Stories</h1>
+        <ul>
+            {% for story in story_list %}
+            <li>
+                <a href="/listen/{{story.key.id}}">{{story.title}}</a> <br />
+                Category: {{story.category}}
+            </li>
+            {% empty %}
+            <p>No stories found</p>
+            {% endfor %}
+        </ul>
         <script>
           (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
           (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

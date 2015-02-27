@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
+    <meta charset="utf-8">
     <head>
-        <meta charset="utf-8" />
-        <title>Form Upload Page</title>
+        <title>Storyweb Test Page - Home</title>
     </head>
     <body>
-        <form action="{{upload}}" enctype="multipart/form-data" method="post">
-            <textarea name="user-story" rows="6" cols="60" placeholder="User's text story goes here"></textarea> <br />
-            <label for="picture-form">Picture</label><input type="file" name="picture" id="picture-form"> <br />
-            <label for="audio-file">Audio</label><input type="file" name="audio" id="audio-file"> <br />
-            <input type="submit">
-        </form>
+        <h1>Main Page</h1>
+        <ul>
+            <li><a href="/uploadpage/">Upload a Story</a></li>
+            <li><a href="/listen/">Listen to Stories</a></li>
+            <li><a href="/admin/">Administrator Page</a></li>
+        </ul>
         <script>
           (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
           (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

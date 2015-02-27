@@ -6,6 +6,7 @@ from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import blobstore
+import logging
 
 def render_template(templatename, templatevalues):
     path = os.path.join(os.path.dirname(__file__), 'templates/' + templatename)
@@ -14,8 +15,8 @@ def render_template(templatename, templatevalues):
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        gauth = GoogleAuth(flow_params = {'state':'', 'approval_prompt': 'force', 'user_id':'drivebox.test@gmail.com'})
-        self.response.out.write('<a href="' + gauth.GetAuthUrl() + '">Authenticate</a>')
+        html = render_template('main_template.html', {})
+        self.response.out.write(html)
 
 class OauthHandler(webapp2.RequestHandler):
     def get(self):
@@ -33,20 +34,7 @@ class OauthHandler(webapp2.RequestHandler):
         credentials_model.put()
         self.redirect("/admin/")
 
-class RefreshTester(webapp2.RequestHandler):
-    def get(self):
-        gauth = GoogleAuth(flow_params = {'state':'', 'approval_prompt': 'force', 'user_id':'drivebox.test@gmail.com'})
-        credentials_model = [x for x in models.APICredentials.query().order(-models.APICredentials.date_obtained)][0]
-        creds_json = credentials_model.credentials
-        gauth.CredentialsFromJSON(creds_json)
-        gauth.Refresh()
-        drive = GoogleDrive(gauth)
-        self.response.out.write(gauth.credentials.to_json())
-        file1 = drive.CreateFile({'title': 'Hello.txt'}) # Create GoogleDriveFile instance with title 'Hello.txt'
-        file1.SetContentString('Hello World!')
-        file1.Upload() # Upload it
-
-class FormPageHandler(webapp2.RequestHandler):
+class UploadPageHandler(webapp2.RequestHandler):
     def get(self):
         upload_url = blobstore.create_upload_url("/upload")
         html = render_template('formpage.html', {"upload": upload_url})
@@ -54,24 +42,58 @@ class FormPageHandler(webapp2.RequestHandler):
 
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
-        title = self.request.get('title')
-        _file = self.get_uploads()[0]
-        gauth = GoogleAuth(flow_params = {'state':'', 'approval_prompt': 'force', 'user_id':'drivebox.test@gmail.com'})
-        credentials_model = [x for x in models.APICredentials.query().order(-models.APICredentials.date_obtained)][0]
-        creds_json = credentials_model.credentials
-        gauth.CredentialsFromJSON(creds_json)
-        gauth.Refresh()
-        drive = GoogleDrive(gauth)
-        file1 = drive.CreateFile({'title': _file.filename, 'mimetype': _file.content_type})
-        file1.SetContentObject(_file)
-        file1.Upload()
-        _file.delete()
+        try:
+            picture = self.get_uploads("picture")[0]
+            audio = self.get_uploads("audio")[0]
+            text = self.request.get('user-story')
+        except:
+            self.response.out.write("You must fill out all fields in the form")
+            return
+        curr_time = int(time.time())
+        new_story = models.Phase1Story(date_posted = curr_time, audio_key = audio.key(), picture_key = picture.key(), text_story = text)
+        new_story.put()
         self.redirect("/")
-       # self.response.out.write(_file.open().read())
+
+class ListenHandler(webapp2.RequestHandler):
+    def get(self):
+        latest_stories = models.Phase2Story.query().order(-models.Phase2Story.date_posted)
+        html = render_template('listen_template.html', {'story_list': latest_stories})
+        self.response.out.write(html)
+
+class StoryPageHandler(webapp2.RequestHandler):
+    base_source = "https://googledrive.com/host/0B-8O_XwimC2dY1dpRGVmaHRFVzQ/"
+    def get(self, story_id):
+        #story_query = models.Phase2Story.query(str(models.Phase2Story.id()) == str(story_id))
+        story = models.Phase2Story.get_by_id(long(story_id))#story_query.get()
+        if story:
+            img_url = self.base_source + story.title + "_" + str(story.date_posted) + "/" + story.picture_name
+            audio_url = self.base_source + story.title + "_" + str(story.date_posted) + "/" + story.audio_name
+            html = render_template('story_template.html', {'audio': audio_url, 'image': img_url, 'story': story})
+            self.response.out.write(html)
+        else:
+            self.response.out.write(story_id)
+
+
+class AudioDownloader(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, audio_key):
+        if not blobstore.get(audio_key):
+            self.error(404)
+        else:
+            self.send_blob(blobstore.get(audio_key), content_type="application/octet-stream", save_as=True)
+
+class ErrorHandler(webapp2.RequestHandler):
+    def get(self):
+        self.response.out.write("Error handling your request <br />")
+        self.response.out.write('<a href="/">Home Page</a>')
 
 
 app = webapp2.WSGIApplication([
-    ("/", FormPageHandler),
-    ("/oauth2callback", OauthHandler),
-    ("/upload", UploadHandler)
+    ("/", MainHandler),
+    ("/oauth2callback/?", OauthHandler),
+    ("/uploadpage/?", UploadPageHandler),
+    ("/upload/?", UploadHandler),
+    ("/listen/?", ListenHandler),
+    ("/audio/([^/]+)?", AudioDownloader),
+    ("/error/?", ErrorHandler),
+    ("/listen/([^/]+)/?", StoryPageHandler)
     ])

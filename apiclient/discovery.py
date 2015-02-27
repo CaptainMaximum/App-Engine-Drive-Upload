@@ -138,7 +138,6 @@ def key2param(key):
 
   return ''.join(result)
 
-
 @positional(2)
 def build(serviceName,
           version,
@@ -187,7 +186,6 @@ def build(serviceName,
   if 'REMOTE_ADDR' in os.environ:
     requested_url = _add_query_parameter(requested_url, 'userIp',
                                          os.environ['REMOTE_ADDR'])
-  logger.info('URL being requested: %s' % requested_url)
 
   resp, content = http.request(requested_url)
 

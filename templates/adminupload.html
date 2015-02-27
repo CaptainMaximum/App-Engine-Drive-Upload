@@ -6,9 +6,18 @@
     </head>
     <body>
         <form action="{{uploadurl}}" enctype="multipart/form-data" method="post">
-            <input type="text" name="title"> <br />
-            <input type="file" name="mp3_file"> <br />
-            <input type="submit">
+            <input type="text" name="title" placeholder="Title here"> <br />
+            <textarea name="user-story" rows="6" cols="60" placeholder="Tell us your story"></textarea> <br />
+            <label for="picture-file">Picture</label><input type="file" name="picture" id="picture-file"> <br />
+            <label for="audio-file">Audio</label><input type="file" name="audio" id="audio-file"> <br />
+            <label for="category">Category</label>
+            <select name="category" id="category">
+                <option>Misc.</option>
+                {% for category in categories %}
+                <option>{{ category.name }}</option>
+                {% endfor %}
+            </select> <br />
+            <input type="submit" value="Upload Story to Site">
         </form>
     </body>
 </html>
